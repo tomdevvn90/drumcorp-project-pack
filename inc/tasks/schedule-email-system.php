@@ -1,12 +1,12 @@
-<?php 
+<?php
 /**
  * Free trail mail sys
- * 
+ *
  */
 
 /**
  * Create hook do some thing after payment success
- * 
+ *
  * @param Number $order
  * @return Void
  */
@@ -27,7 +27,7 @@ function pp_do_something_after_payment_success( $order_id ) {
 
   /**
    * pp_after_payment_success hook.
-   * 
+   *
    * @see pp_freetrail_send_mail_welcome_after_payment_success - 20
    */
   do_action( 'pp_after_payment_success', $products_in_order, $order_status, $user, $replace_variables );
@@ -37,11 +37,11 @@ add_action( 'woocommerce_payment_complete', 'pp_do_something_after_payment_succe
 
 /**
  * Send mail welcome free trail
- * 
+ *
  * @param Array $products_in_order
  * @param String $order_status
- * @param Object $user 
- * 
+ * @param Object $user
+ *
  * @return Void
  */
 function pp_freetrail_send_mail_welcome_after_payment_success( $products_in_order, $order_status, $user, $replace_variables ) {
@@ -52,18 +52,21 @@ function pp_freetrail_send_mail_welcome_after_payment_success( $products_in_orde
     $subject = $email_welcome[ 'email_subject' ];
     $body = str_replace( array_keys( $replace_variables ), array_values( $replace_variables ), $email_welcome[ 'email_template' ] );
 
-    pp_send_email( $user->user_email, $subject, $body );  
+    pp_send_email( $user->user_email, $subject, $body );
+    $userID = $user->ID;
+    $phoneBilling = get_user_meta($userID,'billing_phone',true);
+    pp_send_sms($phoneBilling,$body);
   }
 }
 
 add_action( 'pp_after_payment_success', 'pp_freetrail_send_mail_welcome_after_payment_success', 20, 4 );
 
 /**
- * 
+ *
  * @param Array $products_in_order
  * @param String $order_status
- * @param Object $user 
- * 
+ * @param Object $user
+ *
  * @return Void
  */
 function pp_product_send_mail_welcome_after_payment_success( $products_in_order, $order_status, $user, $replace_variables ) {
@@ -72,19 +75,22 @@ function pp_product_send_mail_welcome_after_payment_success( $products_in_order,
 
   if( in_array( $pid, $products_in_order ) ) {
     $subject = $email_welcome[ 'email_subject' ];
-    $body = str_replace( 
-      array_keys( $replace_variables ), 
-      array_values( $replace_variables ), 
+    $body = str_replace(
+      array_keys( $replace_variables ),
+      array_values( $replace_variables ),
       $email_welcome[ 'email_template' ] );
 
-    pp_send_email( $user->user_email, $subject, $body );  
+    pp_send_email( $user->user_email, $subject, $body );
+    $userID = $user->ID;
+    $phoneBilling = get_user_meta($userID,'billing_phone',true);
+    pp_send_sms($phoneBilling,$body);
   }
 }
 
 add_action( 'pp_after_payment_success', 'pp_product_send_mail_welcome_after_payment_success', 20, 4 );
 
 /**
- * 
+ *
  */
 function pp_get_all_order_complete() {
   $today = date( 'Y-m-d' );
@@ -115,28 +121,28 @@ function pp_get_all_order_complete() {
 }
 
 /**
- * 
+ *
  */
 function pp_send_email_schedule() {
   $orders = pp_get_all_order_complete();
 
-  # for trail 
-  pp_send_email_schedule_action( 
-    $orders, 
-    pp_get_field( 'ft_product', 'option' ), 
+  # for trail
+  pp_send_email_schedule_action(
+    $orders,
+    pp_get_field( 'ft_product', 'option' ),
     pp_get_field( 'ft_email_schedule', 'option' ) );
-  
+
   # for product
-  pp_send_email_schedule_action( 
-    $orders, 
-    pp_get_field( 'p_product', 'option' ), 
+  pp_send_email_schedule_action(
+    $orders,
+    pp_get_field( 'p_product', 'option' ),
     pp_get_field( 'p_email_schedule', 'option' ) );
 }
 
 add_action( 'pp_hook_cron_daily_action', 'pp_send_email_schedule', 20 );
 
 /**
- * 
+ *
  */
 function pp_send_email_schedule_action( $orders, $product, $schedule = [] ) {
 
@@ -146,26 +152,35 @@ function pp_send_email_schedule_action( $orders, $product, $schedule = [] ) {
 
   foreach( $schedule as $s_index => $s ) {
     $after_payment_day = 0; // $s[ 'send_after_payment_day' ];
-    
+
     foreach( $orders as $o_index => $o ) {
 
       if( in_array( $product, $o[ 'products' ] ) ) {
 
         $order_day = $o[ 'date_completed' ];
         $date_send_email = date( "Y-m-d", strtotime( $order_day . " + $after_payment_day day" ) );
-    
+
         if( $date_send_email == $today ) {
           $replace_variables = [
             '{username}' => $o[ 'user' ][ 'display_name' ],
           ];
 
-          pp_send_email( 
-            $o[ 'user' ][ 'email' ], 
-            $s[ 'email_subject' ], 
-            str_replace( 
-              array_keys( $replace_variables ), 
-              array_values( $replace_variables ), 
-              $s[ 'email_template' ] ) );
+          pp_send_email(
+            $o[ 'user' ][ 'email' ],
+            $s[ 'email_subject' ],
+            str_replace(
+              array_keys( $replace_variables ),
+              array_values( $replace_variables ),
+              $s[ 'email_template' ] )
+          );
+
+          $userID = $user->ID;
+          $phoneBilling = get_user_meta($userID,'billing_phone',true);
+          pp_send_sms($phoneBilling,str_replace(
+            array_keys( $replace_variables ),
+            array_values( $replace_variables ),
+            $s[ 'email_template' ] ) );
+
         }
       }
     }
@@ -173,7 +188,7 @@ function pp_send_email_schedule_action( $orders, $product, $schedule = [] ) {
 }
 
 /**
- * 
+ *
  */
 function pp_send_mail_trigger_completed_lession( $args ) {
   $activity_status = $args[ 'activity_status' ];
@@ -183,10 +198,10 @@ function pp_send_mail_trigger_completed_lession( $args ) {
   # Check is lesson & status = 1
   if( $activity_status != 1 ) return;
 
-  $trigger_completed_lession = [ 
-    pp_get_field( 'ft_after_completing_level', 'option' ), 
+  $trigger_completed_lession = [
+    pp_get_field( 'ft_after_completing_level', 'option' ),
     pp_get_field( 'p_after_completing_level', 'option' ) ];
-    
+
   foreach( $trigger_completed_lession as $index => $item ) {
     $select_lesson = $item[ 'select_lesson' ];
     if( (int) $select_lesson == $post_id ) {
@@ -202,9 +217,9 @@ add_action( 'learndash_update_user_activity', 'pp_send_mail_trigger_completed_le
  */
 add_action( 'init', function() {
   if( $_GET[ 'pp' ] ) {
-    // pp_send_email_schedule_action( 
-    //   pp_get_all_order_complete(), 
-    //   pp_get_field( 'ft_product', 'option' ), 
+    // pp_send_email_schedule_action(
+    //   pp_get_all_order_complete(),
+    //   pp_get_field( 'ft_product', 'option' ),
     //   pp_get_field( 'ft_email_schedule', 'option' ) );
     // pp_send_mail_trigger_completed_lession( [
     //   'activity_status' => 1,

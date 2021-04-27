@@ -1,4 +1,4 @@
-<?php 
+<?php
 /*
 Plugin Name: Project Pack
 Plugin URI: #
@@ -9,6 +9,11 @@ Author URI: #
 Text Domain: project-pack
 Domain Path: /lang
 */
+
+require( __DIR__ . '/vendor/autoload.php' );
+
+
+// use Twilio\Rest\Client;
 
 {
   /**
@@ -30,5 +35,7 @@ Domain Path: /lang
   require_once( PP_DIR . '/inc/options.php' );
 
   require_once( PP_DIR . '/inc/tasks/schedule-email-system.php' );
+  require_once( PP_DIR . '/inc/tasks/schedule-sms-system.php' );
+
   require_once( PP_DIR . '/inc/tasks/cron.php' );
 }
