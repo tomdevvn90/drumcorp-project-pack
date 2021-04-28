@@ -1,6 +1,6 @@
-<?php 
+<?php
 /**
- * Helpers 
+ * Helpers
  */
 
 /**
@@ -10,12 +10,12 @@
  */
 function pp_get_field( $selector, $post_id = 0, $format_value = true ) {
   if( ! function_exists( 'get_field' ) ) return null;
-
+  
   return get_field( $selector, $post_id, $format_value );
 }
 
 /**
- * 
+ *
  * @return Void
  */
 function pp_send_email( $to, $subject, $message, $attachments = [] ) {
