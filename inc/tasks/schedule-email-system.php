@@ -83,7 +83,7 @@ function pp_product_send_mail_welcome_after_payment_success( $products_in_order,
     pp_send_email( $user->user_email, $subject, $body );
     $userID = $user->ID;
     $phoneBilling = get_user_meta($userID,'billing_phone',true);
-    pp_send_sms($phoneBilling,$body);
+    pp_send_sms($phoneBilling,$body); 
   }
 }
 
