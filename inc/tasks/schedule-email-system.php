@@ -215,7 +215,7 @@ function pp_send_email_schedule_action( $orders, $product, $schedule = [] ) {
   $today = date( 'Y-m-d' );
 
   foreach( $schedule as $s_index => $s ) {
-    $after_payment_day = 0; // $s[ 'send_after_payment_day' ];
+    $after_payment_day = (int) $s[ 'send_after_payment_day' ];
 
     foreach( $orders as $o_index => $o ) {
 
