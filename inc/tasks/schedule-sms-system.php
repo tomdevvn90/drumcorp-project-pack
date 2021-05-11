@@ -8,7 +8,8 @@
     //     echo 'th2nh';
     //     function text_send_sms() {
     //         // pp_send_sms('+61401360908','test Tom sms');
-    //         var_dump(wp_logout_url());
+    //         var_dump(get_current_user_id());
+    //
     //     }
     //
     // }

@@ -129,6 +129,7 @@ function pp_get_all_order_complete() {
       'status' => $order->get_status(),
       'date_completed' => $order->get_date_completed()->date( 'Y-m-d' ),
       'user' => [
+        'id'=> $user->ID,
         'email' => $user->user_email,
         'display_name' => $user->display_name,
       ],
@@ -176,6 +177,7 @@ add_action( 'pp_hook_cron_daily_action', 'pp_send_email_schedule', 20 );
  */
 
 function pp_send_sms_schedule_action ($orders, $product, $schedule = [] ) {
+
     if( ! $schedule || count( $schedule ) == 0 ) return;
 
     $today = date( 'Y-m-d' );
@@ -184,19 +186,14 @@ function pp_send_sms_schedule_action ($orders, $product, $schedule = [] ) {
       $after_payment_day = 0; // $s[ 'send_after_payment_day' ];
 
       foreach( $orders as $o_index => $o ) {
-
         if( in_array( $product, $o[ 'products' ] ) ) {
-
           $order_day = $o[ 'date_completed' ];
           $date_send_email = date( "Y-m-d", strtotime( $order_day . " + $after_payment_day day" ) );
-
           if( $date_send_email == $today ) {
             $replace_variables = [
               '{username}' => $o[ 'user' ][ 'display_name' ],
             ];
-
-
-            $userID = $user->ID;
+            $userID = $o['user']['id'];
             $phoneBilling = get_user_meta($userID,'billing_phone',true);
             pp_send_sms($phoneBilling,str_replace(
               array_keys( $replace_variables ),
@@ -215,7 +212,7 @@ function pp_send_email_schedule_action( $orders, $product, $schedule = [] ) {
   $today = date( 'Y-m-d' );
 
   foreach( $schedule as $s_index => $s ) {
-    $after_payment_day = 0; // $s[ 'send_after_payment_day' ];
+    $after_payment_day = (int) $s[ 'send_after_payment_day' ];
 
     foreach( $orders as $o_index => $o ) {
 
@@ -250,8 +247,7 @@ function pp_send_mail_trigger_completed_lession( $args ) {
   $activity_status = $args[ 'activity_status' ];
   $post_id = $args[ 'post_id' ];
   $user = get_userdata( $args[ 'user_id' ] );
-
-  $userID = $user->ID;
+  $userID = $args[ 'user_id' ];
   $phoneBilling = get_user_meta($userID,'billing_phone',true);
 
   # Check is lesson & status = 1
@@ -289,13 +285,19 @@ add_action( 'learndash_update_user_activity', 'pp_send_mail_trigger_completed_le
 add_action( 'init', function() {
   if( $_GET[ 'pp' ] ) {
     // pp_send_email_schedule_action(
-    //   pp_get_all_order_complete(),
-    //   pp_get_field( 'ft_product', 'option' ),
-    //   pp_get_field( 'ft_email_schedule', 'option' ) );
+    //     pp_get_all_order_complete(),
+    //     pp_get_field( 'ft_product', 'option' ),
+    //     pp_get_field( 'ft_email_schedule', 'option' )
+    // );
+    // pp_send_sms_schedule_action(
+    //     pp_get_all_order_complete(),
+    //     pp_get_field( 'sms_ft_product', 'option' ),
+    //     pp_get_field( 'ft_sms_schedule', 'option' )
+    // );
     // pp_send_mail_trigger_completed_lession( [
-    //   'activity_status' => 1,
-    //   'user_id' => 821,
-    //   'post_id' => 621,
+    //     'activity_status' => 1,
+    //     'user_id' => 815,
+    //     'post_id' => 621,
     // ] );
   }
 } );
